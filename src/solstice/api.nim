@@ -8,47 +8,35 @@ import
   strutils,
   options
 
+import
+  response,
+  route
+
 type
-  Response* = ref object
-    code: HttpCode
-    msg: string
-    headers: HttpHeaders
-
   Callback = (Request {.closure, gcsafe.} -> Future[void])
-
-  RouteVariableKind = enum
-    String, Int
-
-  RouteVariable* = ref object
-    name: string
-    case kind: RouteVariableKind:
-    of String: strVal*: string
-    of Int: intVal*: int
 
   RequestArgs* = varargs[RouteVariable]
 
   RequestHandler = ((Request, RequestArgs) {.closure, gcsafe.} -> Response)
 
-  Handler = tuple[route: string, httpMethod: HttpMethod, handler: RequestHandler]
+  Handler = ref object
+    route: string
+    reqMethod: HttpMethod
+    handler: RequestHandler
 
   Solstice* = ref object
     routes: seq[Handler]
+
+func newSolstice*(): Solstice =
+  Solstice(routes: @[])
 
 func `[]`*(args: RequestArgs, name: string): RouteVariable =
   for arg in args:
     if arg.name == name:
       return arg
 
-func `$`*(routeVar: RouteVariable): string =
-  case routeVar.kind:
-  of String: &"RouteVariable(kind: String, value: {routeVar.strVal})"
-  of Int: &"RouteVariable(kind: Int, value: {routeVar.intVal})"
-
-func newResponse*(code: HttpCode, msg: string, headers: HttpHeaders): Response =
-  Response(code: code, msg: msg, headers: headers)
-
-func newResponse*(code: HttpCode, msg: string): Response =
-  Response(code: code, msg: msg, headers: newHttpHeaders())
+func newHandler*(route: string, reqMethod: HttpMethod, handler: RequestHandler): Handler =
+  Handler(route: route, reqMethod: reqMethod, handler: handler)
 
 proc pathMatch*(route: string, url: Uri): bool =
   let
@@ -65,7 +53,7 @@ proc pathMatch*(route: string, url: Uri): bool =
   true
 
 func add*(app: var Solstice, route: string, httpMethod: HttpMethod, handler: RequestHandler) =
-  app.routes.add((route, httpMethod, handler))
+  app.routes.add(newHandler(route, httpMethod, handler))
 
 func delete*(app: var Solstice, route: string, handler: RequestHandler) =
   app.add(route, HttpPut, handler)
@@ -79,14 +67,11 @@ func post*(app: var Solstice, route: string, handler: RequestHandler) =
 func get*(app: var Solstice, route: string, handler: RequestHandler) =
   app.add(route, HttpGet, handler)
 
-func newSolstice*(): Solstice =
-  Solstice(routes: @[])
-
 func getRoute(app: Solstice, request: Request): Option[Handler] =
-  for (route, httpMethod, handler) in app.routes:
-    if pathMatch(route, request.url):
-      if httpMethod == request.reqMethod:
-        return some((route, httpMethod, handler))
+  for handler in app.routes:
+    if pathMatch(handler.route, request.url):
+      if handler.reqMethod == request.reqMethod:
+        return some(handler)
   none(Handler)
 
 proc getHandler(app: Solstice, request: Request): RequestHandler =
@@ -107,9 +92,9 @@ proc getVariables(app: Solstice, request: Request): seq[RouteVariable] =
         rSplit = rSec.split(":")
         name = rSplit[0].substr(1, rSplit[0].len-1)
       if uSec[0].isDigit:
-        result.add(RouteVariable(name: name, kind: Int, intVal: uSec.parseInt))
+        result.add(newRouteVariable(name, uSec.parseInt))
       else:
-        result.add(RouteVariable(name: name, kind: String, strVal: uSec))
+        result.add(newRouteVariable(name, uSec))
 
 proc createCallback(app: Solstice): Future[Callback] {.async.} =
   proc callback(request: Request): Future[void] {.async.} =
