@@ -8,37 +8,87 @@ import
   strutils,
   options
 
-import
-  response,
-  route
-
 type
   Callback = (Request {.closure, gcsafe.} -> Future[void])
+  
+  ResponseObj = object
+    code: HttpCode
+    msg: string
+    headers: HttpHeaders
+  
+  Response* = ref ResponseObj
+  
+  RouteVariableKind = enum
+    String
+    Int
+  
+  RouteVariableObj = object
+    name: string
+    case kind: RouteVariableKind:
+    of String: strVal*: string
+    of Int: intVal*: int
+  
+  RouteVariable = ref RouteVariableObj
 
   RequestArgs* = varargs[RouteVariable]
-
+  
   RequestHandler = ((Request, RequestArgs) {.closure, gcsafe.} -> Response)
-
-  Handler = ref object
+  
+  HandlerObj = object
     route: string
     reqMethod: HttpMethod
     handler: RequestHandler
+  
+  Handler = ref HandlerObj
 
-  Solstice* = ref object
+  SolsticeObj = object
     routes: seq[Handler]
+    port: int
+  
+  Solstice* = ref SolsticeObj
 
-func newSolstice*(): Solstice =
-  Solstice(routes: @[])
+func newResponse*(code: HttpCode, msg: string, headers: HttpHeaders): Response =
+  new result
+  result.code = code
+  result.msg = msg
+  result.headers = headers
 
-func `[]`*(args: RequestArgs, name: string): RouteVariable =
+func newResponse*(code: HttpCode, msg: string): Response =
+  newResponse(code, msg, newHttpHeaders())
+
+func newRouteVariable(name, value: string): RouteVariable =
+  new result
+  result.name = name
+  result.kind = RouteVariableKind.String
+  result.strVal = value
+
+func newRouteVariable(name: string, value: int): RouteVariable =
+  new result
+  result.name = name
+  result.kind = RouteVariableKind.Int
+  result.intval = value
+
+func `[]`*(args: RequestArgs, name: string): Option[RouteVariable] =
   for arg in args:
     if arg.name == name:
-      return arg
+      return some(arg)
+  none(RouteVariable)
 
-func newHandler*(route: string, reqMethod: HttpMethod, handler: RequestHandler): Handler =
-  Handler(route: route, reqMethod: reqMethod, handler: handler)
+func newHandler(route: string, reqMethod: HttpMethod, handler: RequestHandler): Handler =
+  new result
+  result.route = route
+  result.reqMethod = reqMethod
+  result.handler = handler
 
-proc pathMatch*(route: string, url: Uri): bool =
+func newSolstice*(port: int): Solstice =
+  new result
+  result.routes = @[]
+  result.port = port
+
+func newSolstice*(): Solstice =
+  newSolstice(5000)
+
+proc pathMatch(route: string, url: Uri): bool =
   let
     rSplit = route.split("/")
     uSplit = ($url).split("/")
@@ -113,4 +163,4 @@ proc run*(app: Solstice) {.async.} =
     server = newAsyncHttpServer()
     callback = await app.createCallback()
 
-  waitFor server.serve(Port(5000), callback)
+  waitFor server.serve(Port(app.port), callback)
