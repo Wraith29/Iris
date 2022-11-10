@@ -43,34 +43,34 @@ type
     routes*: seq[Handler]
     port: int
 
-func newResponse*(code: HttpCode, msg: string, headers: HttpHeaders): Response =
+proc newResponse*(code: HttpCode, msg: string, headers: HttpHeaders): Response =
   new result
   result.code = code
   result.msg = msg
   result.headers = headers
 
-func newResponse*(code: HttpCode, msg: string): Response =
+proc newResponse*(code: HttpCode, msg: string): Response =
   newResponse(code, msg, newHttpHeaders())
 
-func newRouteVariable(name, value: string): RouteVariable =
+proc newRouteVariable(name, value: string): RouteVariable =
   new result
   result.name = name
   result.kind = RouteVariableKind.String
   result.strVal = value
 
-func newRouteVariable(name: string, value: int): RouteVariable =
+proc newRouteVariable(name: string, value: int): RouteVariable =
   new result
   result.name = name
   result.kind = RouteVariableKind.Int
   result.intval = value
 
-func `[]`*(args: RequestArgs, name: string): Option[RouteVariable] =
+proc `[]`*(args: RequestArgs, name: string): Option[RouteVariable] =
   for arg in args:
     if arg.name == name:
       return some(arg)
   none(RouteVariable)
 
-func newHandler(route: string, reqMethod: HttpMethod, handler: RequestHandler): Handler =
+proc newHandler(route: string, reqMethod: HttpMethod, handler: RequestHandler): Handler =
   new result
   result.route = route
   result.reqMethod = reqMethod
@@ -82,18 +82,53 @@ proc `$`*(handler: RequestHandler): string =
 proc `$`*(handler: Handler): string =
   &"Handler(route: {handler.route}, method: {handler.reqMethod}, handler: {handler.handler})"
 
-func newContainer*(name: string): Container =
+proc newContainer*(name: string): Container =
   new result
   result.name = name
   result.routes = @[]
 
-func newSolstice*(port: int): Solstice =
+proc newSolstice*(port: int): Solstice =
   new result
   result.routes = @[]
   result.port = port
 
-func newSolstice*(): Solstice =
+proc newSolstice*(): Solstice =
   newSolstice(5000)
+
+proc add*(container: var Container, route: string, httpMethod: HttpMethod, handler: RequestHandler) =
+  let path = &"/{container.name}{route}"
+  container.routes.add(newHandler(path, httpMethod, handler))
+
+proc delete*(container: var Container, route: string, handler: RequestHandler) =
+  container.add(route, HttpPut, handler)
+
+proc put*(container: var Container, route: string, handler: RequestHandler) =
+  container.add(route, HttpPut, handler)
+
+proc post*(container: var Container, route: string, handler: RequestHandler) =
+  container.add(route, HttpPost, handler)
+
+proc get*(container: var Container, route: string, handler: RequestHandler) =
+  container.add(route, HttpGet, handler)
+
+proc add*(app: var Solstice, route: string, httpMethod: HttpMethod, handler: RequestHandler) =
+  app.routes.add(newHandler(route, httpMethod, handler))
+
+proc delete*(app: var Solstice, route: string, handler: RequestHandler) =
+  app.add(route, HttpPut, handler)
+
+proc put*(app: var Solstice, route: string, handler: RequestHandler) =
+  app.add(route, HttpPut, handler)
+
+proc post*(app: var Solstice, route: string, handler: RequestHandler) =
+  app.add(route, HttpPost, handler)
+
+proc get*(app: var Solstice, route: string, handler: RequestHandler) =
+  app.add(route, HttpGet, handler)
+
+proc register*(app: var Solstice, container: Container) =
+  for handler in container.routes:
+    app.add(handler.route, handler.reqMethod, handler.handler)
 
 proc pathMatch(route: string, url: Uri): bool =
   let
@@ -107,44 +142,17 @@ proc pathMatch(route: string, url: Uri): bool =
     if not rSec.startsWith("{") and not rSec.endsWith("}"):
       if rSec == uSec: continue
       else: return false
+
+    let 
+      rSpl = rSec.split(":")
+      uSecKind = if uSec[0].isDigit(): "int" else: "string"
+      rSecKind = rSpl[1].substr(0, rSpl[1].len-2)
+    
+    if rSecKind != uSecKind:
+      return false
   true
 
-func add*(container: var Container, route: string, httpMethod: HttpMethod, handler: RequestHandler) =
-  let path = &"/{container.name}{route}"
-  container.routes.add(newHandler(path, httpMethod, handler))
-
-func delete*(container: var Container, route: string, handler: RequestHandler) =
-  container.add(route, HttpPut, handler)
-
-func put*(container: var Container, route: string, handler: RequestHandler) =
-  container.add(route, HttpPut, handler)
-
-func post*(container: var Container, route: string, handler: RequestHandler) =
-  container.add(route, HttpPost, handler)
-
-func get*(container: var Container, route: string, handler: RequestHandler) =
-  container.add(route, HttpGet, handler)
-
-func add*(app: var Solstice, route: string, httpMethod: HttpMethod, handler: RequestHandler) =
-  app.routes.add(newHandler(route, httpMethod, handler))
-
-func delete*(app: var Solstice, route: string, handler: RequestHandler) =
-  app.add(route, HttpPut, handler)
-
-func put*(app: var Solstice, route: string, handler: RequestHandler) =
-  app.add(route, HttpPut, handler)
-
-func post*(app: var Solstice, route: string, handler: RequestHandler) =
-  app.add(route, HttpPost, handler)
-
-func get*(app: var Solstice, route: string, handler: RequestHandler) =
-  app.add(route, HttpGet, handler)
-
-proc register*(app: var Solstice, container: Container) =
-  for handler in container.routes:
-    app.add(handler.route, handler.reqMethod, handler.handler)
-
-func getRoute(app: Solstice, request: Request): Option[Handler] =
+proc getRoute(app: Solstice, request: Request): Option[Handler] =
   for handler in app.routes:
     if pathMatch(handler.route, request.url):
       if handler.reqMethod == request.reqMethod:
@@ -156,12 +164,13 @@ proc getHandler(app: Solstice, request: Request): RequestHandler =
   if res.isSome:
     res.get.handler
   else:
-    ((r: Request, _: varargs[RouteVariable]) => newResponse(Http404, "Page Not Found"))
+    ((r: Request, _: RequestArgs) => newResponse(Http404, "Page Not Found"))
 
 proc getVariables(app: Solstice, request: Request): seq[RouteVariable] =
   let res = app.getRoute(request)
-  if res.isNone:
+  if isNone res:
     return @[]
+
   let route = res.get().route
   for (rSec, uSec) in zip(route.split("/"), ($request.url).split("/")):
     if rSec.startsWith("{") and rSec.endsWith("}"):
