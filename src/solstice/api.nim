@@ -11,41 +11,37 @@ import
 type
   Callback = (Request {.closure, gcsafe.} -> Future[void])
   
-  ResponseObj = object
+  Response* = ref object
     code: HttpCode
     msg: string
     headers: HttpHeaders
-  
-  Response* = ref ResponseObj
   
   RouteVariableKind = enum
     String
     Int
   
-  RouteVariableObj = object
+  RouteVariable = ref object
     name: string
     case kind: RouteVariableKind:
     of String: strVal*: string
     of Int: intVal*: int
-  
-  RouteVariable = ref RouteVariableObj
 
   RequestArgs* = varargs[RouteVariable]
   
   RequestHandler = ((Request, RequestArgs) {.closure, gcsafe.} -> Response)
   
-  HandlerObj = object
+  Handler = ref object
     route: string
     reqMethod: HttpMethod
     handler: RequestHandler
-  
-  Handler = ref HandlerObj
 
-  SolsticeObj = object
+  Container* = ref object
+    name: string
     routes: seq[Handler]
+
+  Solstice* = ref object
+    routes*: seq[Handler]
     port: int
-  
-  Solstice* = ref SolsticeObj
 
 func newResponse*(code: HttpCode, msg: string, headers: HttpHeaders): Response =
   new result
@@ -80,6 +76,17 @@ func newHandler(route: string, reqMethod: HttpMethod, handler: RequestHandler): 
   result.reqMethod = reqMethod
   result.handler = handler
 
+proc `$`*(handler: RequestHandler): string =
+  &"RequestHandler"
+
+proc `$`*(handler: Handler): string =
+  &"Handler(route: {handler.route}, method: {handler.reqMethod}, handler: {handler.handler})"
+
+func newContainer*(name: string): Container =
+  new result
+  result.name = name
+  result.routes = @[]
+
 func newSolstice*(port: int): Solstice =
   new result
   result.routes = @[]
@@ -102,6 +109,22 @@ proc pathMatch(route: string, url: Uri): bool =
       else: return false
   true
 
+func add*(container: var Container, route: string, httpMethod: HttpMethod, handler: RequestHandler) =
+  let path = &"/{container.name}{route}"
+  container.routes.add(newHandler(path, httpMethod, handler))
+
+func delete*(container: var Container, route: string, handler: RequestHandler) =
+  container.add(route, HttpPut, handler)
+
+func put*(container: var Container, route: string, handler: RequestHandler) =
+  container.add(route, HttpPut, handler)
+
+func post*(container: var Container, route: string, handler: RequestHandler) =
+  container.add(route, HttpPost, handler)
+
+func get*(container: var Container, route: string, handler: RequestHandler) =
+  container.add(route, HttpGet, handler)
+
 func add*(app: var Solstice, route: string, httpMethod: HttpMethod, handler: RequestHandler) =
   app.routes.add(newHandler(route, httpMethod, handler))
 
@@ -116,6 +139,10 @@ func post*(app: var Solstice, route: string, handler: RequestHandler) =
 
 func get*(app: var Solstice, route: string, handler: RequestHandler) =
   app.add(route, HttpGet, handler)
+
+proc register*(app: var Solstice, container: Container) =
+  for handler in container.routes:
+    app.add(handler.route, handler.reqMethod, handler.handler)
 
 func getRoute(app: Solstice, request: Request): Option[Handler] =
   for handler in app.routes:
@@ -141,7 +168,9 @@ proc getVariables(app: Solstice, request: Request): seq[RouteVariable] =
       let
         rSplit = rSec.split(":")
         name = rSplit[0].substr(1, rSplit[0].len-1)
-      if uSec[0].isDigit:
+        kind = rSplit[1].substr(0, rSplit[1].len-2)
+
+      if uSec[0].isDigit and kind == "int":
         result.add(newRouteVariable(name, uSec.parseInt))
       else:
         result.add(newRouteVariable(name, uSec))
