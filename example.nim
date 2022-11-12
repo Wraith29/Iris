@@ -41,9 +41,6 @@ proc main {.async.} =
   sol.register(getPostContainer())
   sol.register(getUserContainer())
   
-  for route in sol.routes:
-    echo route
-  
   waitFor sol.run()
 
 when isMainModule:

@@ -12,84 +12,15 @@ import
 
 import
   callback,
-  server
+  container,
+  handler,
+  response,
+  route
 
 type
-  Response* = ref object
-    code: HttpCode
-    msg: string
-    headers: HttpHeaders
-  
-  RouteVariableKind = enum
-    String
-    Int
-  
-  RouteVariable = ref object
-    name: string
-    case kind: RouteVariableKind:
-    of String: strVal*: string
-    of Int: intVal*: int
-
-  RequestArgs* = varargs[RouteVariable]
-  
-  RequestHandler = ((Request, RequestArgs) {.closure, gcsafe.} -> Response)
-  
-  Handler = ref object
-    route: string
-    reqMethod: HttpMethod
-    handler: RequestHandler
-
-  Container* = ref object
-    name: string
-    routes: seq[Handler]
-
   Solstice* = ref object
     routes*: seq[Handler]
     port: int
-
-proc newResponse*(code: HttpCode, msg: string, headers: HttpHeaders): Response =
-  new result
-  result.code = code
-  result.msg = msg
-  result.headers = headers
-
-proc newResponse*(code: HttpCode, msg: string): Response =
-  newResponse(code, msg, newHttpHeaders())
-
-proc newRouteVariable(name, value: string): RouteVariable =
-  new result
-  result.name = name
-  result.kind = RouteVariableKind.String
-  result.strVal = value
-
-proc newRouteVariable(name: string, value: int): RouteVariable =
-  new result
-  result.name = name
-  result.kind = RouteVariableKind.Int
-  result.intval = value
-
-proc `[]`*(args: RequestArgs, name: string): Option[RouteVariable] =
-  for arg in args:
-    if arg.name == name:
-      return some(arg)
-  none(RouteVariable)
-
-proc newHandler(route: string, reqMethod: HttpMethod, handler: RequestHandler): Handler =
-  new result
-  result.route = route
-  result.reqMethod = reqMethod
-  result.handler = handler
-
-proc `$`*(handler: RequestHandler): string =
-  &"RequestHandler"
-
-proc `$`*(handler: Handler): string =
-  &"Handler(route: {handler.route}, method: {handler.reqMethod}, handler: {handler.handler})"
-
-proc newContainer*(name: string): Container =
-  new result
-  result.name = name
-  result.routes = @[]
 
 proc newSolstice*(port: int): Solstice =
   new result
@@ -98,22 +29,6 @@ proc newSolstice*(port: int): Solstice =
 
 proc newSolstice*(): Solstice =
   newSolstice(5000)
-
-proc add*(container: var Container, route: string, httpMethod: HttpMethod, handler: RequestHandler) =
-  let path = &"/{container.name}{route}"
-  container.routes.add(newHandler(path, httpMethod, handler))
-
-proc delete*(container: var Container, route: string, handler: RequestHandler) =
-  container.add(route, HttpPut, handler)
-
-proc put*(container: var Container, route: string, handler: RequestHandler) =
-  container.add(route, HttpPut, handler)
-
-proc post*(container: var Container, route: string, handler: RequestHandler) =
-  container.add(route, HttpPost, handler)
-
-proc get*(container: var Container, route: string, handler: RequestHandler) =
-  container.add(route, HttpGet, handler)
 
 proc add*(app: var Solstice, route: string, httpMethod: HttpMethod, handler: RequestHandler) =
   app.routes.add(newHandler(route, httpMethod, handler))
@@ -201,11 +116,8 @@ proc createCallback(app: Solstice): Future[Callback] {.async.} =
   return callback
 
 proc run*(app: Solstice) {.async.} =
-  #   server = newAsyncHttpServer()
   let 
+    server = newAsyncHttpServer()
     callback = await app.createCallback()
-    server = newServer(5000, callback)
   
-  waitFor server.serve()
-
-  # waitFor server.serve(Port(app.port), callback)
+  waitFor server.serve(Port(app.port), callback)
