@@ -1,6 +1,5 @@
 import 
   asynchttpserver,
-  asyncdispatch,
   uri,
   sequtils,
   sugar,
@@ -8,9 +7,14 @@ import
   strutils,
   options
 
+import
+  asyncdispatch except Callback
+
+import
+  callback,
+  server
+
 type
-  Callback = (Request {.closure, gcsafe.} -> Future[void])
-  
   Response* = ref object
     code: HttpCode
     msg: string
@@ -197,8 +201,11 @@ proc createCallback(app: Solstice): Future[Callback] {.async.} =
   return callback
 
 proc run*(app: Solstice) {.async.} =
+  #   server = newAsyncHttpServer()
   let 
-    server = newAsyncHttpServer()
     callback = await app.createCallback()
+    server = newServer(5000, callback)
+  
+  waitFor server.serve()
 
-  waitFor server.serve(Port(app.port), callback)
+  # waitFor server.serve(Port(app.port), callback)
