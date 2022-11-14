@@ -35,7 +35,7 @@ proc index(req: Request, args: RequestArgs): Response =
   newResponse(Http200, "Hello, World!")
 
 proc main {.async.} =
-  var sol = newSolstice()
+  var sol = newSolstice(4200)
   
   sol.get("/", index)
   sol.register(getPostContainer())

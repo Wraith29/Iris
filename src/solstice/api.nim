@@ -14,7 +14,6 @@ import
   callback,
   container,
   handler,
-  middleware,
   response,
   route
 
@@ -22,7 +21,6 @@ type
   Solstice* = ref object
     routes*: seq[Handler]
     port: int
-    middleware*: seq[Middleware]
 
 proc newSolstice*(port: int): Solstice =
   new result
@@ -115,7 +113,7 @@ proc createCallback(app: Solstice): Future[Callback] {.async.} =
     let
       handler = app.getHandler(request)
       args = app.getVariables(request)
-      response = await handler.invoke(request, args)
+      response = handler.handler(request, args)
 
     await request.respond(response.code, response.msg, response.headers)
 
