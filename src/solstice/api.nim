@@ -14,6 +14,7 @@ import
   callback,
   container,
   handler,
+  middleware,
   response,
   route
 
@@ -21,6 +22,7 @@ type
   Solstice* = ref object
     routes*: seq[Handler]
     port: int
+    middleware*: seq[Middleware]
 
 proc newSolstice*(port: int): Solstice =
   new result
@@ -30,11 +32,11 @@ proc newSolstice*(port: int): Solstice =
 proc newSolstice*(): Solstice =
   newSolstice(5000)
 
-proc add*(app: var Solstice, route: string, httpMethod: HttpMethod, handler: RequestHandler) =
+proc add(app: var Solstice, route: string, httpMethod: HttpMethod, handler: RequestHandler) =
   app.routes.add(newHandler(route, httpMethod, handler))
 
 proc delete*(app: var Solstice, route: string, handler: RequestHandler) =
-  app.add(route, HttpPut, handler)
+  app.add(route, HttpDelete, handler)
 
 proc put*(app: var Solstice, route: string, handler: RequestHandler) =
   app.add(route, HttpPut, handler)
@@ -78,12 +80,16 @@ proc getRoute(app: Solstice, request: Request): Option[Handler] =
         return some(handler)
   none(Handler)
 
-proc getHandler(app: Solstice, request: Request): RequestHandler =
+proc getHandler(app: Solstice, request: Request): Handler =
   let res = app.getRoute(request)
   if res.isSome:
-    res.get.handler
+    res.get()
   else:
-    ((r: Request, _: RequestArgs) => newResponse(Http404, "Page Not Found"))
+    newHandler(
+      "",
+      HttpGet,
+      ((req: Request, args: RequestArgs) => newResponse(Http404, "Page Not Found"))
+    )
 
 proc getVariables(app: Solstice, request: Request): seq[RouteVariable] =
   let res = app.getRoute(request)
@@ -108,9 +114,9 @@ proc createCallback(app: Solstice): Future[Callback] {.async.} =
     echo &"Received Request To: {request.url}"
     let
       handler = app.getHandler(request)
-      vars = app.getVariables(request)
-      response = handler(request, vars)
-    
+      args = app.getVariables(request)
+      response = await handler.invoke(request, args)
+
     await request.respond(response.code, response.msg, response.headers)
 
   return callback
