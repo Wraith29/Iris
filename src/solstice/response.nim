@@ -1,10 +1,11 @@
 import
   httpcore
 
-type Response* = ref object
-  code*: HttpCode
-  msg*: string
-  headers*: HttpHeaders
+type
+  Response* = ref object
+    code*: HttpCode
+    msg*: string
+    headers*: HttpHeaders
 
 func newResponse*(code: HttpCode, msg: string, headers: HttpHeaders): Response =
   new result

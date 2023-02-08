@@ -1,4 +1,5 @@
-import asyncdispatch, options, strformat
+import asyncdispatch
+import strformat
 import src/solstice
 
 proc getPostById(req: Request, args: RequestArgs): Response =
@@ -36,11 +37,11 @@ proc index(req: Request, args: RequestArgs): Response =
 
 proc main {.async.} =
   var sol = newSolstice(4200)
-  
+
   sol.get("/", index)
   sol.register(getPostContainer())
   sol.register(getUserContainer())
-  
+
   waitFor sol.run()
 
 when isMainModule:

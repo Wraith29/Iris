@@ -14,7 +14,8 @@ type
     reqMethod*: HttpMethod
     handler*: RequestHandler
 
-proc newHandler*(route: string, reqMethod: HttpMethod, handler: RequestHandler): Handler =
+proc newHandler*(route: string, reqMethod: HttpMethod,
+    handler: RequestHandler): Handler =
   new result
   result.route = route
   result.reqMethod = reqMethod

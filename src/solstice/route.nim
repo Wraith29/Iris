@@ -1,11 +1,11 @@
-import 
+import
   options
 
 type
   RouteVariableKind = enum
     String
     Int
-  
+
   RouteVariable* = ref object
     name: string
     case kind: RouteVariableKind:

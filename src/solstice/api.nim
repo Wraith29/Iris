@@ -1,4 +1,4 @@
-import 
+import
   asynchttpserver,
   uri,
   sequtils,
@@ -62,11 +62,11 @@ proc pathMatch(route: string, url: Uri): bool =
       if rSec == uSec: continue
       else: return false
 
-    let 
+    let
       rSpl = rSec.split(":")
       uSecKind = if uSec[0].isDigit(): "int" else: "string"
       rSecKind = rSpl[1].substr(0, rSpl[1].len-2)
-    
+
     if rSecKind != uSecKind:
       return false
   true
@@ -86,7 +86,8 @@ proc getHandler(app: Solstice, request: Request): Handler =
     newHandler(
       "",
       HttpGet,
-      ((req: Request, args: RequestArgs) => newResponse(Http404, "Page Not Found"))
+      ((req: Request, args: RequestArgs) => newResponse(Http404,
+          "Page Not Found"))
     )
 
 proc getVariables(app: Solstice, request: Request): seq[RouteVariable] =
@@ -108,7 +109,7 @@ proc getVariables(app: Solstice, request: Request): seq[RouteVariable] =
         result.add(newRouteVariable(name, uSec))
 
 proc createCallback(app: Solstice): Future[Callback] {.async.} =
-  proc callback(request: Request): Future[void] {.async.} =
+  proc callback(request: Request) {.async.} =
     echo &"Received Request To: {request.url}"
     let
       handler = app.getHandler(request)
@@ -120,8 +121,9 @@ proc createCallback(app: Solstice): Future[Callback] {.async.} =
   return callback
 
 proc run*(app: Solstice) {.async.} =
-  let 
+  let
     server = newAsyncHttpServer()
     callback = await app.createCallback()
-  
+
+  echo fmt"Starting Server on Port: {app.port}"
   waitFor server.serve(Port(app.port), callback)
