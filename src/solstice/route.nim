@@ -14,16 +14,10 @@ type
   RequestArgs* = varargs[RouteVariable]
 
 proc newRouteVariable*(name, value: string): RouteVariable =
-  new result
-  result.name = name
-  result.kind = RouteVariableKind.String
-  result.strVal = value
+  RouteVariable(name: name, kind: String, strVal: value)
 
 proc newRouteVariable*(name: string, value: int): RouteVariable =
-  new result
-  result.name = name
-  result.kind = RouteVariableKind.Int
-  result.intval = value
+  RouteVariable(name: name, kind: Int, intVal: value)
 
 proc get*(args: RequestArgs, name: string): Option[RouteVariable] =
   for arg in args:
