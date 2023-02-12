@@ -6,7 +6,6 @@ import sequtils
 import options
 import sugar
 import uri
-
 import handler
 import callback
 import container
@@ -29,16 +28,16 @@ proc newSolstice*(): Solstice =
 proc add(app: var Solstice, route: string, httpMethod: HttpMethod, handler: RequestHandler) =
   app.routes.add(newHandler(route, httpMethod, handler))
 
-template delete*(app: var Solstice, route: string, handler: RequestHandler) =
+proc delete*(app: var Solstice, route: string, handler: RequestHandler) =
   app.add(route, HttpDelete, handler)
 
-template put*(app: var Solstice, route: string, handler: RequestHandler) =
+proc put*(app: var Solstice, route: string, handler: RequestHandler) =
   app.add(route, HttpPut, handler)
 
-template post*(app: var Solstice, route: string, handler: RequestHandler) =
+proc post*(app: var Solstice, route: string, handler: RequestHandler) =
   app.add(route, HttpPost, handler)
 
-template get*(app: var Solstice, route: string, handler: RequestHandler) =
+proc get*(app: var Solstice, route: string, handler: RequestHandler) =
   app.add(route, HttpGet, handler)
 
 proc register*(app: var Solstice, container: Container) =
