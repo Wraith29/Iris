@@ -1,5 +1,4 @@
-import
-  options
+import options
 
 type
   RouteVariableKind = enum

@@ -1,9 +1,7 @@
-import
-  asynchttpserver,
-  strformat
+import asynchttpserver
+import strformat
 
-import
-  handler
+import handler
 
 type
   Container* = ref object

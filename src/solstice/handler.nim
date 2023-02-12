@@ -1,10 +1,8 @@
-import
-  asynchttpserver,
-  sugar
+import asynchttpserver
+import sugar
 
-import
-  response,
-  route
+import response
+import route
 
 type
   RequestHandler* = ((Request, RequestArgs) {.closure, gcsafe.} -> Response)
@@ -14,8 +12,7 @@ type
     reqMethod*: HttpMethod
     handler*: RequestHandler
 
-proc newHandler*(route: string, reqMethod: HttpMethod,
-    handler: RequestHandler): Handler =
+proc newHandler*(route: string, reqMethod: HttpMethod, handler: RequestHandler): Handler =
   new result
   result.route = route
   result.reqMethod = reqMethod

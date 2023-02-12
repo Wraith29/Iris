@@ -1,21 +1,17 @@
-import
-  asynchttpserver,
-  uri,
-  sequtils,
-  sugar,
-  strformat,
-  strutils,
-  options
+import asyncdispatch except Callback
+import asynchttpserver
+import strformat
+import strutils
+import sequtils
+import options
+import sugar
+import uri
 
-import
-  asyncdispatch except Callback
-
-import
-  callback,
-  container,
-  handler,
-  response,
-  route
+import handler
+import callback
+import container
+import route
+import response
 
 type
   Solstice* = ref object
@@ -33,16 +29,16 @@ proc newSolstice*(): Solstice =
 proc add(app: var Solstice, route: string, httpMethod: HttpMethod, handler: RequestHandler) =
   app.routes.add(newHandler(route, httpMethod, handler))
 
-proc delete*(app: var Solstice, route: string, handler: RequestHandler) =
+template delete*(app: var Solstice, route: string, handler: RequestHandler) =
   app.add(route, HttpDelete, handler)
 
-proc put*(app: var Solstice, route: string, handler: RequestHandler) =
+template put*(app: var Solstice, route: string, handler: RequestHandler) =
   app.add(route, HttpPut, handler)
 
-proc post*(app: var Solstice, route: string, handler: RequestHandler) =
+template post*(app: var Solstice, route: string, handler: RequestHandler) =
   app.add(route, HttpPost, handler)
 
-proc get*(app: var Solstice, route: string, handler: RequestHandler) =
+template get*(app: var Solstice, route: string, handler: RequestHandler) =
   app.add(route, HttpGet, handler)
 
 proc register*(app: var Solstice, container: Container) =
@@ -86,8 +82,7 @@ proc getHandler(app: Solstice, request: Request): Handler =
     newHandler(
       "",
       HttpGet,
-      ((req: Request, args: RequestArgs) => newResponse(Http404,
-          "Page Not Found"))
+      ((req: Request, args: RequestArgs) => newResponse(Http404, "Page Not Found"))
     )
 
 proc getVariables(app: Solstice, request: Request): seq[RouteVariable] =

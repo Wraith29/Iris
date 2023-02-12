@@ -1,5 +1,4 @@
-import
-  httpcore
+import httpcore
 
 type
   Response* = ref object
