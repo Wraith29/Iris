@@ -1,3 +1,4 @@
+import strformat
 import options
 
 type
@@ -30,3 +31,8 @@ proc `[]`*(args: RequestArgs, name: string): Option[RouteVariable] =
     if arg.name == name:
       return some(arg)
   none(RouteVariable)
+
+proc `$`*(routeVar: RouteVariable): string =
+  case routeVar.kind:
+  of String: fmt"RouteVariable(name: {routeVar.name}, value: {routeVar.strVal})"
+  of Int: fmt"RouteVariable(name: {routeVar.name}, value: {routeVar.intVal})"
