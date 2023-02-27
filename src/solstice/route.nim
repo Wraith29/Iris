@@ -1,18 +1,17 @@
 import strformat
 import options
 
-type
-  RouteVariableKind = enum
-    String
-    Int
+type RouteVariableKind = enum
+  String
+  Int
 
-  RouteVariable* = ref object
-    name: string
-    case kind: RouteVariableKind:
-    of String: strVal*: string
-    of Int: intVal*: int
+type RouteVariable* = ref object
+  name: string
+  case kind: RouteVariableKind:
+  of String: strVal*: string
+  of Int: intVal*: int
 
-  RequestArgs* = varargs[RouteVariable]
+type RequestArgs* = varargs[RouteVariable]
 
 proc newRouteVariable*(name, value: string): RouteVariable =
   RouteVariable(name: name, kind: String, strVal: value)

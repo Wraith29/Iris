@@ -1,12 +1,10 @@
 import asynchttpserver
 import strformat
-
 import handler
 
-type
-  Container* = ref object
-    name*: string
-    routes*: seq[Handler]
+type Container* = ref object
+  name*: string
+  routes*: seq[Handler]
 
 proc newContainer*(name: string): Container =
   new result

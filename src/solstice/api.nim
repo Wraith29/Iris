@@ -12,10 +12,11 @@ import container
 import route
 import response
 
-type
-  Solstice* = ref object
-    routes*: seq[Handler]
-    port: int
+const AnsiCyan = "\u001b[36m"
+
+type Solstice* = ref object
+  routes*: seq[Handler]
+  port: int
 
 proc newSolstice*(port: int): Solstice =
   new result
@@ -45,26 +46,24 @@ proc register*(app: var Solstice, container: Container) =
     app.add(handler.route, handler.reqMethod, handler.handler)
 
 proc pathMatch(route: string, url: Uri): bool =
-  let
-    rSplit = route.split("/")
-    uSplit = ($url).split("/")
+  let routeSplit = route.split("/")
+  let urlSplit = ($url).split("/")
 
-  if rSplit.len != uSplit.len:
+  if routeSplit.len != urlSplit.len:
     return false
 
-  for (rSec, uSec) in zip(rSplit, uSplit):
-    if not rSec.startsWith("{") and not rSec.endsWith("}"):
-      if rSec == uSec: continue
+  for (routeSection, urlSection) in zip(routeSplit, urlSplit):
+    if not routeSection.startsWith("{") and not routeSection.endsWith("}"):
+      if routeSection == urlSection: continue
       else: return false
 
-    let
-      rSpl = rSec.split(":")
-      uSecKind = if uSec[0].isDigit(): "int" else: "string"
-      rSecKind = rSpl[1].substr(0, rSpl[1].len-2)
+    let rSpl = routeSection.split(":")
+    let uSecKind = if urlSection[0].isDigit(): "int" else: "string"
+    let rSecKind = rSpl[1].substr(0, rSpl[1].len-2)
 
     if rSecKind != uSecKind:
       return false
-  true
+  return true
 
 proc getRoute(app: Solstice, request: Request): Option[Handler] =
   for handler in app.routes:
@@ -90,34 +89,31 @@ proc getVariables(app: Solstice, request: Request): seq[RouteVariable] =
     return @[]
 
   let route = res.get().route
-  for (rSec, uSec) in zip(route.split("/"), ($request.url).split("/")):
-    if rSec.startsWith("{") and rSec.endsWith("}"):
-      let
-        rSplit = rSec.split(":")
-        name = rSplit[0].substr(1, rSplit[0].len-1)
-        kind = rSplit[1].substr(0, rSplit[1].len-2)
+  for (routeSection, urlSection) in zip(route.split("/"), ($request.url).split("/")):
+    if routeSection.startsWith("{") and routeSection.endsWith("}"):
+      let rSplit = routeSection.split(":")
+      let name = rSplit[0].substr(1, rSplit[0].len-1)
+      let kind = rSplit[1].substr(0, rSplit[1].len-2)
 
-      if uSec[0].isDigit and kind == "int":
-        result.add(newRouteVariable(name, uSec.parseInt))
+      if urlSection[0].isDigit and kind == "int":
+        result.add(newRouteVariable(name, urlSection.parseInt))
       else:
-        result.add(newRouteVariable(name, uSec))
+        result.add(newRouteVariable(name, urlSection))
 
 proc createCallback(app: Solstice): Future[Callback] {.async.} =
   proc callback(request: Request) {.async.} =
-    echo &"Received Request To: {request.url}"
-    let
-      handler = app.getHandler(request)
-      args = app.getVariables(request)
-      response = handler.handler(request, args)
+    echo &"{AnsiCyan}[DBG]: Received Request To: {request.url}"
+    let handler = app.getHandler(request)
+    let args = app.getVariables(request)
+    let response = handler.handler(request, args)
 
     await request.respond(response.code, response.msg, response.headers)
 
   return callback
 
 proc run*(app: Solstice) {.async.} =
-  let
-    server = newAsyncHttpServer()
-    callback = await app.createCallback()
+  let server = newAsyncHttpServer()
+  let callback = await app.createCallback()
 
-  echo fmt"Starting Server on Port: {app.port}"
+  echo fmt"{AnsiCyan}[DBG]: Starting Server on Port: {app.port}"
   waitFor server.serve(Port(app.port), callback)
