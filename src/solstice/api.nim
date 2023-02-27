@@ -13,6 +13,10 @@ import route
 import response
 
 const AnsiCyan = "\u001b[36m"
+const AnsiReset = "\u001b[0m"
+
+proc log(msg: string) =
+  echo fmt"{AnsiCyan}[DBG]: {msg}{AnsiReset}"
 
 type Solstice* = ref object
   routes*: seq[Handler]
@@ -102,7 +106,7 @@ proc getVariables(app: Solstice, request: Request): seq[RouteVariable] =
 
 proc createCallback(app: Solstice): Future[Callback] {.async.} =
   proc callback(request: Request) {.async.} =
-    echo &"{AnsiCyan}[DBG]: Received Request To: {request.url}"
+    log fmt"Received Request To: {request.url}"
     let handler = app.getHandler(request)
     let args = app.getVariables(request)
     let response = handler.handler(request, args)
@@ -115,5 +119,5 @@ proc run*(app: Solstice) {.async.} =
   let server = newAsyncHttpServer()
   let callback = await app.createCallback()
 
-  echo fmt"{AnsiCyan}[DBG]: Starting Server on Port: {app.port}"
+  log fmt"Starting Server on Port: {app.port}"
   waitFor server.serve(Port(app.port), callback)
