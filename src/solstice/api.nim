@@ -11,16 +11,12 @@ import callback
 import container
 import route
 import response
-
-const AnsiCyan = "\u001b[36m"
-const AnsiReset = "\u001b[0m"
-
-proc log(msg: string) =
-  echo fmt"{AnsiCyan}[DBG]: {msg}{AnsiReset}"
+import log
 
 type Solstice* = ref object
   routes*: seq[Handler]
   port: int
+  cors: seq[string]
 
 proc newSolstice*(port: int): Solstice =
   new result
@@ -104,12 +100,19 @@ proc getVariables(app: Solstice, request: Request): seq[RouteVariable] =
       else:
         result.add(newRouteVariable(name, urlSection))
 
+proc addCorsOrigins*(app: var Solstice, origins: varargs[string]) =
+  for origin in origins:
+    app.cors.add(origin)
+
 proc createCallback(app: Solstice): Future[Callback] {.async.} =
   proc callback(request: Request) {.async.} =
-    log fmt"Received Request To: {request.url}"
+    log fmt"Received Request To: {$request.url}"
     let handler = app.getHandler(request)
     let args = app.getVariables(request)
-    let response = handler.handler(request, args)
+    var response = handler.handler(request, args)
+
+    for origin in app.cors:
+      response.addHeader("Access-Control-Allow-Origin", origin)
 
     await request.respond(response.code, response.msg, response.headers)
 
