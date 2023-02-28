@@ -41,6 +41,7 @@ proc main {.async.} =
   sol.get("/", index)
   sol.register(getPostContainer())
   sol.register(getUserContainer())
+  sol.addCorsOrigins("http://localhost:3000")
 
   waitFor sol.run()
 
