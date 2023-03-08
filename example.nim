@@ -57,7 +57,7 @@ proc main {.async.} =
   sol.register(getAuthContainer())
 
   sol.post("/test", proc (r:Request, a:RequestArgs): Response =
-    echo r.body.toTable()
+    echo r.body.toJson()
   
     return newResponse(Http200, "Hello, World!")
   )

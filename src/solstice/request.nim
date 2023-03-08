@@ -1,7 +1,7 @@
 import tables
 import json
 
-proc toTable*(reqBody: string): TableRef[string, string] =
+proc toJson*(reqBody: string): TableRef[string, string] =
   var items = newTable[string, string]()
 
   for key in parseJson(reqBody).keys:
