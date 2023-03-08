@@ -106,7 +106,7 @@ proc addCorsOrigins*(app: var Solstice, origins: varargs[string]) =
 
 proc createCallback(app: Solstice): Future[Callback] {.async.} =
   proc callback(request: Request) {.async.} =
-    log fmt"Received Request To: {$request.url}"
+    log fmt"Received {$request.reqMethod} Request To: {$request.url}"
     let handler = app.getHandler(request)
     let args = app.getVariables(request)
     var response = handler.handler(request, args)
@@ -118,9 +118,13 @@ proc createCallback(app: Solstice): Future[Callback] {.async.} =
 
   return callback
 
-proc run*(app: Solstice) {.async.} =
+proc run*(app: Solstice, debug: bool = false) {.async.} =
   let server = newAsyncHttpServer()
   let callback = await app.createCallback()
+
+  if debug:
+    for handler in app.routes:
+      log fmt"[{handler.reqMethod}] http://localhost:{app.port}{handler.route}"
 
   log fmt"Starting Server on Port: {app.port}"
   waitFor server.serve(Port(app.port), callback)
