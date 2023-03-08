@@ -1,6 +1,7 @@
 import asyncdispatch
 import strformat
 import src/solstice
+import tables
 
 proc getPostById(req: Request, args: RequestArgs): Response =
   let id = args["id"]
@@ -54,6 +55,13 @@ proc main {.async.} =
   sol.register(getPostContainer())
   sol.register(getUserContainer())
   sol.register(getAuthContainer())
+
+  sol.post("/test", proc (r:Request, a:RequestArgs): Response =
+    echo r.body.toTable()
+  
+    return newResponse(Http200, "Hello, World!")
+  )
+  
   sol.addCorsOrigins("http://localhost:3000")
 
   waitFor sol.run()
