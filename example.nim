@@ -3,6 +3,8 @@ import strformat
 import src/solstice
 import tables
 
+import asdasd
+
 proc getPostById(req: Request, args: RequestArgs): Response =
   let id = args["id"]
   if isNone id:
@@ -46,7 +48,9 @@ proc getAuthContainer: Container =
   )
 
 proc index(req: Request, args: RequestArgs): Response =
-  newResponse(Http200, "Hello, World!")
+  let templ = loadTemplate("example.html", { "pageTitle": newVar("Page Title :)") }.toTable())
+  echo templ
+  return newResponse(Http200, templ)
 
 proc main {.async.} =
   var sol = newSolstice(5000)

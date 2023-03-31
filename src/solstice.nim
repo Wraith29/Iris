@@ -5,6 +5,8 @@ import solstice/container
 import solstice/request
 import solstice/response
 import solstice/route
+import solstice/ui/parser
+import solstice/ui/vars
 
 export api
 export asynchttpserver
@@ -13,3 +15,5 @@ export options
 export request
 export response
 export route
+export parser
+export vars
