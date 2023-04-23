@@ -2,4 +2,4 @@ import asyncdispatch
 import asynchttpserver
 import sugar
 
-type Callback* = (Request {.closure, gcsafe.} -> Future[void])
+type CallbackFn* = (Request {.async, closure, gcsafe.} -> Future[void])

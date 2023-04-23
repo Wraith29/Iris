@@ -2,8 +2,8 @@ import asyncdispatch
 import strformat
 import src/solstice
 import tables
+import sugar
 
-import asdasd
 
 proc getPostById(req: Request, args: RequestArgs): Response =
   let id = args["id"]
@@ -47,15 +47,10 @@ proc getAuthContainer: Container =
     return newResponse(Http200, "Hello, World!")
   )
 
-proc index(req: Request, args: RequestArgs): Response =
-  let templ = loadTemplate("example.html", { "pageTitle": newVar("Page Title :)") }.toTable())
-  echo templ
-  return newResponse(Http200, templ)
-
 proc main {.async.} =
   var sol = newSolstice(5000)
 
-  sol.get("/", index)
+  sol.get("/", (req: Request, args: RequestArgs) => newResponse(Http200, "Hello, World!"))
   sol.register(getPostContainer())
   sol.register(getUserContainer())
   sol.register(getAuthContainer())

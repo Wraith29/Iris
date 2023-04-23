@@ -1,4 +1,4 @@
-import asyncdispatch except Callback
+import asyncdispatch
 import asynchttpserver
 import strformat
 import strutils
@@ -18,34 +18,43 @@ type Solstice* = ref object
   port: int
   cors: seq[string]
 
+
 proc newSolstice*(port: int): Solstice =
   new result
   result.routes = @[]
   result.port = port
 
+
 proc newSolstice*(): Solstice =
   newSolstice(5000)
 
-proc add(app: var Solstice, route: string, httpMethod: HttpMethod, handler: RequestHandler) =
+
+proc add(app: var Solstice; route: string; httpMethod: HttpMethod; handler: RequestHandler) =
   app.routes.add(newHandler(route, httpMethod, handler))
 
-proc delete*(app: var Solstice, route: string, handler: RequestHandler) =
+
+proc delete*(app: var Solstice; route: string; handler: RequestHandler) =
   app.add(route, HttpDelete, handler)
 
-proc put*(app: var Solstice, route: string, handler: RequestHandler) =
+
+proc put*(app: var Solstice; route: string; handler: RequestHandler) =
   app.add(route, HttpPut, handler)
 
-proc post*(app: var Solstice, route: string, handler: RequestHandler) =
+
+proc post*(app: var Solstice; route: string; handler: RequestHandler) =
   app.add(route, HttpPost, handler)
 
-proc get*(app: var Solstice, route: string, handler: RequestHandler) =
+
+proc get*(app: var Solstice; route: string; handler: RequestHandler) =
   app.add(route, HttpGet, handler)
 
-proc register*(app: var Solstice, container: Container) =
+
+proc register*(app: var Solstice; container: Container) =
   for handler in container.routes:
     app.add(handler.route, handler.reqMethod, handler.handler)
 
-proc pathMatch(route: string, url: Uri): bool =
+
+proc pathMatch(route: string; url: Uri): bool =
   let routeSplit = route.split("/")
   let urlSplit = ($url).split("/")
 
@@ -65,25 +74,27 @@ proc pathMatch(route: string, url: Uri): bool =
       return false
   return true
 
-proc getRoute(app: Solstice, request: Request): Option[Handler] =
+
+proc getRoute(app: Solstice; request: Request): Option[Handler] =
   for handler in app.routes:
     if pathMatch(handler.route, request.url):
       if handler.reqMethod == request.reqMethod:
         return some(handler)
   none(Handler)
 
-proc getHandler(app: Solstice, request: Request): Handler =
+
+proc getHandler(app: Solstice; request: Request): Handler =
   let res = app.getRoute(request)
   if res.isSome:
-    res.get()
+    return res.get()
   else:
-    newHandler(
-      "",
-      HttpGet,
-      ((req: Request, args: RequestArgs) => newResponse(Http404, "Page Not Found"))
-    )
+    let handler = (req: Request, args: RequestArgs) => newResponse(Http404, "Page Not Found")
+    let notFoundHandler = newHandler("", HttpGet, handler)
+    
+    return notFoundHandler
 
-proc getVariables(app: Solstice, request: Request): seq[RouteVariable] =
+
+proc getVariables(app: Solstice; request: Request): seq[RouteVariable] =
   let res = app.getRoute(request)
   if isNone res:
     return @[]
@@ -100,11 +111,13 @@ proc getVariables(app: Solstice, request: Request): seq[RouteVariable] =
       else:
         result.add(newRouteVariable(name, urlSection))
 
-proc addCorsOrigins*(app: var Solstice, origins: varargs[string]) =
+
+proc addCorsOrigins*(app: var Solstice; origins: varargs[string]) =
   for origin in origins:
     app.cors.add(origin)
 
-proc createCallback(app: Solstice): Future[Callback] {.async.} =
+
+proc createCallback(app: Solstice): Future[CallbackFn] {.async.} =
   proc callback(request: Request) {.async.} =
     log fmt"Received {$request.reqMethod} Request To: {$request.url}"
     let handler = app.getHandler(request)
@@ -118,7 +131,8 @@ proc createCallback(app: Solstice): Future[Callback] {.async.} =
 
   return callback
 
-proc run*(app: Solstice, debug: bool = false) {.async.} =
+
+proc run*(app: Solstice; debug: bool = false) {.async.} =
   let server = newAsyncHttpServer()
   let callback = await app.createCallback()
 
