@@ -1,10 +1,10 @@
 import asynchttpserver
 import options
-import solstice/api
-import solstice/container
-import solstice/request
-import solstice/response
-import solstice/route
+import iris/api
+import iris/container
+import iris/request
+import iris/response
+import iris/route
 
 export api
 export asynchttpserver
