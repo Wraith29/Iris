@@ -1,6 +1,6 @@
 import asyncdispatch
 import strformat
-import src/solstice
+import src/iris
 import tables
 import sugar
 
@@ -47,23 +47,23 @@ proc getAuthContainer: Container =
     return newResponse(Http200, "Hello, World!")
   )
 
-proc main {.async.} =
-  var sol = newSolstice(5000)
+proc main() {.async.} =
+  var api = newApi(5000)
 
-  sol.get("/", (req: Request, args: RequestArgs) => newResponse(Http200, "Hello, World!"))
-  sol.register(getPostContainer())
-  sol.register(getUserContainer())
-  sol.register(getAuthContainer())
+  api.get("/", (req: Request, args: RequestArgs) => newResponse(Http200, "Hello, World!"))
+  api.register(getPostContainer())
+  api.register(getUserContainer())
+  api.register(getAuthContainer())
 
-  sol.post("/test", proc (r:Request, a:RequestArgs): Response =
+  api.post("/test", proc (r:Request, a:RequestArgs): Response =
     echo r.body.toJson()
   
     return newResponse(Http200, "Hello, World!")
   )
   
-  sol.addCorsOrigins("http://localhost:3000")
+  api.addCorsOrigins("http://localhost:3000")
 
-  waitFor sol.run()
+  waitFor api.run()
 
 when isMainModule:
   waitFor main()

@@ -13,43 +13,41 @@ import route
 import response
 import log
 
-type Solstice* = ref object
+type Api* = ref object
   routes*: seq[Handler]
   port: int
   cors: seq[string]
 
 
-proc newSolstice*(port: int): Solstice =
-  new result
-  result.routes = @[]
-  result.port = port
+proc newApi*(port: int): Api =
+  return Api(routes: @[], port: port)
 
 
-proc newSolstice*(): Solstice =
-  newSolstice(5000)
+proc newApi*(): Api =
+  return newApi(5000)
 
 
-proc add(app: var Solstice; route: string; httpMethod: HttpMethod; handler: RequestHandler) =
+proc add(app: var Api; route: string; httpMethod: HttpMethod; handler: RequestHandler) =
   app.routes.add(newHandler(route, httpMethod, handler))
 
 
-proc delete*(app: var Solstice; route: string; handler: RequestHandler) =
+template delete*(app: var Api; route: string; handler: RequestHandler) =
   app.add(route, HttpDelete, handler)
 
 
-proc put*(app: var Solstice; route: string; handler: RequestHandler) =
+template put*(app: var Api; route: string; handler: RequestHandler) =
   app.add(route, HttpPut, handler)
 
 
-proc post*(app: var Solstice; route: string; handler: RequestHandler) =
+template post*(app: var Api; route: string; handler: RequestHandler) =
   app.add(route, HttpPost, handler)
 
 
-proc get*(app: var Solstice; route: string; handler: RequestHandler) =
+template get*(app: var Api; route: string; handler: RequestHandler) =
   app.add(route, HttpGet, handler)
 
 
-proc register*(app: var Solstice; container: Container) =
+proc register*(app: var Api; container: Container) =
   for handler in container.routes:
     app.add(handler.route, handler.reqMethod, handler.handler)
 
@@ -75,7 +73,7 @@ proc pathMatch(route: string; url: Uri): bool =
   return true
 
 
-proc getRoute(app: Solstice; request: Request): Option[Handler] =
+proc getRoute(app: Api; request: Request): Option[Handler] =
   for handler in app.routes:
     if pathMatch(handler.route, request.url):
       if handler.reqMethod == request.reqMethod:
@@ -83,7 +81,7 @@ proc getRoute(app: Solstice; request: Request): Option[Handler] =
   none(Handler)
 
 
-proc getHandler(app: Solstice; request: Request): Handler =
+proc getHandler(app: Api; request: Request): Handler =
   let res = app.getRoute(request)
   if res.isSome:
     return res.get()
@@ -94,7 +92,7 @@ proc getHandler(app: Solstice; request: Request): Handler =
     return notFoundHandler
 
 
-proc getVariables(app: Solstice; request: Request): seq[RouteVariable] =
+proc getVariables(app: Api; request: Request): seq[RouteVariable] =
   let res = app.getRoute(request)
   if isNone res:
     return @[]
@@ -112,12 +110,12 @@ proc getVariables(app: Solstice; request: Request): seq[RouteVariable] =
         result.add(newRouteVariable(name, urlSection))
 
 
-proc addCorsOrigins*(app: var Solstice; origins: varargs[string]) =
+proc addCorsOrigins*(app: var Api; origins: varargs[string]) =
   for origin in origins:
     app.cors.add(origin)
 
 
-proc createCallback(app: Solstice): Future[CallbackFn] {.async.} =
+proc createCallback(app: Api): Future[CallbackFn] {.async.} =
   proc callback(request: Request) {.async.} =
     log fmt"Received {$request.reqMethod} Request To: {$request.url}"
     let handler = app.getHandler(request)
@@ -132,7 +130,7 @@ proc createCallback(app: Solstice): Future[CallbackFn] {.async.} =
   return callback
 
 
-proc run*(app: Solstice; debug: bool = false) {.async.} =
+proc run*(app: Api; debug: bool = false) {.async.} =
   let server = newAsyncHttpServer()
   let callback = await app.createCallback()
 

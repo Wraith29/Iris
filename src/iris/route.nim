@@ -2,8 +2,7 @@ import strformat
 import options
 
 type RouteVariableKind = enum
-  String
-  Int
+  String, Int
 
 type RouteVariable* = ref object
   name: string
