@@ -1,4 +1,5 @@
-import asyncdispatch
+# import asyncdispatch
+import chronos
 import asynchttpserver
 import strformat
 import strutils
@@ -11,7 +12,6 @@ import callback
 import container
 import route
 import response
-import log
 
 type Api* = ref object
   routes*: seq[Handler]
@@ -117,7 +117,7 @@ proc addCorsOrigins*(app: var Api; origins: varargs[string]) =
 
 proc createCallback(app: Api): Future[CallbackFn] {.async.} =
   proc callback(request: Request) {.async.} =
-    log fmt"Received {$request.reqMethod} Request To: {$request.url}"
+    echo fmt"Received {$request.reqMethod} Request To: {$request.url}"
     let handler = app.getHandler(request)
     let args = app.getVariables(request)
     var response = handler.handler(request, args)
@@ -134,9 +134,5 @@ proc run*(app: Api; debug: bool = false) {.async.} =
   let server = newAsyncHttpServer()
   let callback = await app.createCallback()
 
-  if debug:
-    for handler in app.routes:
-      log fmt"[{handler.reqMethod}] http://localhost:{app.port}{handler.route}"
-
-  log fmt"Starting Server on Port: {app.port}"
+  echo fmt"Starting Server on Port: {app.port}"
   waitFor server.serve(Port(app.port), callback)
