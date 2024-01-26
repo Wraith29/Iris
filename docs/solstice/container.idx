@@ -1,0 +1,8 @@
+nimTitle	container	solstice/container.html	module src/solstice/container		0
+nim	Container	solstice/container.html#Container	type Container		5
+nim	newContainer	solstice/container.html#newContainer,string	proc newContainer(name: string): Container		9
+nim	add	solstice/container.html#add,Container,string,HttpMethod,RequestHandler	proc add(container: var Container; route: string; httpMethod: HttpMethod;\n    handler: RequestHandler)		14
+nim	delete	solstice/container.html#delete.t,Container,string,RequestHandler	template delete(container: var Container; route: string; handler: RequestHandler)		18
+nim	put	solstice/container.html#put.t,Container,string,RequestHandler	template put(container: var Container; route: string; handler: RequestHandler)		21
+nim	post	solstice/container.html#post.t,Container,string,RequestHandler	template post(container: var Container; route: string; handler: RequestHandler)		24
+nim	get	solstice/container.html#get.t,Container,string,RequestHandler	template get(container: var Container; route: string; handler: RequestHandler)		27

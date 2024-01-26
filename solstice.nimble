@@ -1,13 +1,22 @@
 # Package
 
-version       = "1.0.5"
+version       = "0.1.0"
 author        = "Isaac Naylor"
-description   = "A new awesome nimble package"
+description   = "A Web Framework"
 license       = "MIT"
 srcDir        = "src"
 
 
 # Dependencies
 
-requires "nim >= 1.6.12"
-requires "chronos"
+requires "nim >= 2.1.1"
+requires "jsony"
+
+# Tasks
+
+task docs, "Build the Documentation":
+    exec "nim doc --project --index:on -o:docs ./src/solstice.nim"
+
+task test, "Run all rests":
+    exec "testament cat ."
+    exec "testament html"

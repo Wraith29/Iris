@@ -1,5 +1,4 @@
-# import asyncdispatch
-import chronos
+import asyncdispatch
 import asynchttpserver
 import strformat
 import strutils
@@ -18,39 +17,30 @@ type Api* = ref object
   port: int
   cors: seq[string]
 
-
 proc newApi*(port: int): Api =
   return Api(routes: @[], port: port)
-
 
 proc newApi*(): Api =
   return newApi(5000)
 
-
 proc add(app: var Api; route: string; httpMethod: HttpMethod; handler: RequestHandler) =
   app.routes.add(newHandler(route, httpMethod, handler))
-
 
 template delete*(app: var Api; route: string; handler: RequestHandler) =
   app.add(route, HttpDelete, handler)
 
-
 template put*(app: var Api; route: string; handler: RequestHandler) =
   app.add(route, HttpPut, handler)
-
 
 template post*(app: var Api; route: string; handler: RequestHandler) =
   app.add(route, HttpPost, handler)
 
-
 template get*(app: var Api; route: string; handler: RequestHandler) =
   app.add(route, HttpGet, handler)
-
 
 proc register*(app: var Api; container: Container) =
   for handler in container.routes:
     app.add(handler.route, handler.reqMethod, handler.handler)
-
 
 proc pathMatch(route: string; url: Uri): bool =
   let routeSplit = route.split("/")
@@ -72,7 +62,6 @@ proc pathMatch(route: string; url: Uri): bool =
       return false
   return true
 
-
 proc getRoute(app: Api; request: Request): Option[Handler] =
   for handler in app.routes:
     if pathMatch(handler.route, request.url):
@@ -80,17 +69,15 @@ proc getRoute(app: Api; request: Request): Option[Handler] =
         return some(handler)
   none(Handler)
 
-
 proc getHandler(app: Api; request: Request): Handler =
   let res = app.getRoute(request)
   if res.isSome:
     return res.get()
-  else:
-    let handler = (req: Request, args: RequestArgs) => newResponse(Http404, "Page Not Found")
-    let notFoundHandler = newHandler("", HttpGet, handler)
-    
-    return notFoundHandler
 
+  let handler = (req: Request, args: RequestArgs) => newResponse(Http404, "Page Not Found")
+  let notFoundHandler = newHandler("", HttpGet, handler)
+  
+  return notFoundHandler
 
 proc getVariables(app: Api; request: Request): seq[RouteVariable] =
   let res = app.getRoute(request)
@@ -110,10 +97,9 @@ proc getVariables(app: Api; request: Request): seq[RouteVariable] =
         result.add(newRouteVariable(name, urlSection))
 
 
-proc addCorsOrigins*(app: var Api; origins: varargs[string]) =
+proc addCorsOrigins*(app: var Api; origins: varargs[string, `$`]) =
   for origin in origins:
     app.cors.add(origin)
-
 
 proc createCallback(app: Api): Future[CallbackFn] {.async.} =
   proc callback(request: Request) {.async.} =
@@ -128,7 +114,6 @@ proc createCallback(app: Api): Future[CallbackFn] {.async.} =
     await request.respond(response.code, response.msg, response.headers)
 
   return callback
-
 
 proc run*(app: Api; debug: bool = false) {.async.} =
   let server = newAsyncHttpServer()

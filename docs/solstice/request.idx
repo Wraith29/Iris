@@ -1,0 +1,2 @@
+nimTitle	request	solstice/request.html	module src/solstice/request		0
+nim	toJson	solstice/request.html#toJson,string	proc toJson(reqBody: string): TableRef[string, string]		4

@@ -15,5 +15,5 @@ func newResponse*(code: HttpCode; msg: string; headers: HttpHeaders): Response =
 func newResponse*(code: HttpCode; msg: string): Response =
   return newResponse(code, msg, newHttpHeaders())
 
-proc addHeader*(response: var Response; key, value: string) =
+func addHeader*(response: var Response; key, value: string) =
   response.headers.add(key, value)

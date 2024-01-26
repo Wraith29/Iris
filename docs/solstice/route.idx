@@ -1,0 +1,9 @@
+nimTitle	route	solstice/route.html	module src/solstice/route		0
+nim	RouteVariable	solstice/route.html#RouteVariable	type RouteVariable		7
+nim	RequestArgs	solstice/route.html#RequestArgs	type RequestArgs		13
+nim	newRouteVariable	solstice/route.html#newRouteVariable,string,string	proc newRouteVariable(name, value: string): RouteVariable		15
+nim	newRouteVariable	solstice/route.html#newRouteVariable,string,int	proc newRouteVariable(name: string; value: int): RouteVariable		18
+nim	get	solstice/route.html#get,RequestArgs,string	proc get(args: RequestArgs; name: string): Option[RouteVariable]		21
+nim	`[]`	solstice/route.html#[],RequestArgs,string	proc `[]`(args: RequestArgs; name: string): Option[RouteVariable]		28
+nim	`$`	solstice/route.html#$,RouteVariable	proc `$`(routeVar: RouteVariable): string		35
+nimgrp	newroutevariable	solstice/route.html#newRouteVariable-procs-all	proc		15

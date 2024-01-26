@@ -12,27 +12,27 @@ type RouteVariable* = ref object
 
 type RequestArgs* = varargs[RouteVariable]
 
-proc newRouteVariable*(name, value: string): RouteVariable =
+func newRouteVariable*(name, value: string): RouteVariable =
   return RouteVariable(name: name, kind: String, strVal: value)
 
-proc newRouteVariable*(name: string; value: int): RouteVariable =
+func newRouteVariable*(name: string; value: int): RouteVariable =
   return RouteVariable(name: name, kind: Int, intVal: value)
 
-proc get*(args: RequestArgs; name: string): Option[RouteVariable] =
+func get*(args: RequestArgs; name: string): Option[RouteVariable] =
   for arg in args:
     if arg.name == name:
       return some(arg)
 
   return none(RouteVariable)
 
-proc `[]`*(args: RequestArgs; name: string): Option[RouteVariable] =
+func `[]`*(args: RequestArgs; name: string): Option[RouteVariable] =
   for arg in args:
     if arg.name == name:
       return some(arg)
 
   return none(RouteVariable)
 
-proc `$`*(routeVar: RouteVariable): string =
+func `$`*(routeVar: RouteVariable): string =
   return case routeVar.kind:
     of String: fmt"RouteVariable(name: {routeVar.name}, value: {routeVar.strVal})"
     of Int: fmt"RouteVariable(name: {routeVar.name}, value: {routeVar.intVal})"

@@ -1,0 +1,12 @@
+nimTitle	api	solstice/api.html	module src/solstice/api		0
+nim	Api	solstice/api.html#Api	type Api		15
+nim	newApi	solstice/api.html#newApi,int	proc newApi(port: int): Api		20
+nim	newApi	solstice/api.html#newApi	proc newApi(): Api		23
+nim	delete	solstice/api.html#delete.t,Api,string,RequestHandler	template delete(app: var Api; route: string; handler: RequestHandler)		29
+nim	put	solstice/api.html#put.t,Api,string,RequestHandler	template put(app: var Api; route: string; handler: RequestHandler)		32
+nim	post	solstice/api.html#post.t,Api,string,RequestHandler	template post(app: var Api; route: string; handler: RequestHandler)		35
+nim	get	solstice/api.html#get.t,Api,string,RequestHandler	template get(app: var Api; route: string; handler: RequestHandler)		38
+nim	register	solstice/api.html#register,Api,Container	proc register(app: var Api; container: Container)		41
+nim	addCorsOrigins	solstice/api.html#addCorsOrigins,Api,varargs[string,]	proc addCorsOrigins(app: var Api; origins: varargs[string, `$`])		100
+nim	run	solstice/api.html#run,Api,bool	proc run(app: Api; debug: bool = false): owned(Future[void])		118
+nimgrp	newapi	solstice/api.html#newApi-procs-all	proc		20

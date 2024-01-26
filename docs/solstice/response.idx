@@ -1,0 +1,6 @@
+nimTitle	response	solstice/response.html	module src/solstice/response		0
+nim	Response	solstice/response.html#Response	type Response		3
+nim	newResponse	solstice/response.html#newResponse,HttpCode,string,HttpHeaders	proc newResponse(code: HttpCode; msg: string; headers: HttpHeaders): Response		8
+nim	newResponse	solstice/response.html#newResponse,HttpCode,string	proc newResponse(code: HttpCode; msg: string): Response		15
+nim	addHeader	solstice/response.html#addHeader,Response,string,string	proc addHeader(response: var Response; key, value: string)		18
+nimgrp	newresponse	solstice/response.html#newResponse-procs-all	proc		8

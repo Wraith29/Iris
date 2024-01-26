@@ -1,0 +1,4 @@
+nimTitle	handler	solstice/handler.html	module src/solstice/handler		0
+nim	RequestHandler	solstice/handler.html#RequestHandler	type RequestHandler		6
+nim	Handler	solstice/handler.html#Handler	type Handler		8
+nim	newHandler	solstice/handler.html#newHandler,string,HttpMethod,RequestHandler	proc newHandler(route: string; reqMethod: HttpMethod; handler: RequestHandler): Handler		13
