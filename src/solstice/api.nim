@@ -8,7 +8,7 @@ import sugar
 import uri
 import handler
 import callback
-import container
+import module
 import route
 import response
 
@@ -38,8 +38,8 @@ template post*(app: var Api; route: string; handler: RequestHandler) =
 template get*(app: var Api; route: string; handler: RequestHandler) =
   app.add(route, HttpGet, handler)
 
-proc register*(app: var Api; container: Container) =
-  for handler in container.routes:
+proc register*(app: var Api; module: Module) =
+  for handler in module.routes:
     app.add(handler.route, handler.reqMethod, handler.handler)
 
 proc pathMatch(route: string; url: Uri): bool =
