@@ -1,4 +1,4 @@
-import httpcore
+import std/[httpcore]
 
 type Response* = ref object
   code*: HttpCode

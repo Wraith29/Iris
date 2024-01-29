@@ -1,16 +1,6 @@
-import asyncdispatch
-import asynchttpserver
-import strformat
-import strutils
-import sequtils
-import options
-import sugar
-import uri
-import handler
-import callback
-import module
-import route
-import response
+import std/[asyncdispatch, asynchttpserver, options, sequtils, strformat, strutils, sugar, uri]
+import src/solstice/[callback, handler, module, response, route]
+
 
 type Api* = ref object
   routes*: seq[Handler]

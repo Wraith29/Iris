@@ -1,6 +1,5 @@
-import asynchttpserver
-import strformat
-import handler
+import std/[asynchttpserver, strformat]
+import src/solstice/[handler]
 
 type Module* = ref object
   name*: string

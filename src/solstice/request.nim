@@ -1,4 +1,4 @@
-import tables
+import std/[tables]
 import jsony
 
 proc toJson*(reqBody: string): TableRef[string, string] =

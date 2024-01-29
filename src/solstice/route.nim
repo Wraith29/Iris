@@ -1,5 +1,4 @@
-import strformat
-import options
+import std/[options, strformat]
 
 type RouteVariableKind = enum
   String, Int
