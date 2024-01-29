@@ -1,5 +1,5 @@
 import std/[asynchttpserver, strformat]
-import src/solstice/[handler]
+import ./[handler]
 
 type Module* = ref object
   name*: string

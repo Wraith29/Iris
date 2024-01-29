@@ -1,15 +1,3 @@
-import asynchttpserver
-import options
-import solstice/api
-import solstice/module
-import solstice/request
-import solstice/response
-import solstice/route
+import solstice/[api, module, request, response, route]
 
-export api
-export asynchttpserver
-export module
-export options
-export request
-export response
-export route
+export api, module, request, response, route

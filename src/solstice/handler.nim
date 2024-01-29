@@ -1,5 +1,5 @@
 import std/[asynchttpserver, strutils, sugar]
-import src/solstice/[response, route]
+import ./[response, route]
 
 type RequestHandler* = ((Request, RequestArgs) {.closure, gcsafe.} -> Response)
 

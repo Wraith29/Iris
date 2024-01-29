@@ -1,5 +1,5 @@
 import std/[asyncdispatch, asynchttpserver, options, sequtils, strformat, strutils, sugar, uri]
-import src/solstice/[callback, handler, module, response, route]
+import ./[callback, handler, module, response, route]
 
 
 type Api* = ref object
